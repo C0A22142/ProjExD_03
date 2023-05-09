@@ -198,7 +198,7 @@ def main():
                     beam = None
                     del bombs[i]
                     bird.change_img(6, screen)
-                    score.count_s(1) #count_s呼出し
+                    score.count_s(1)
                     break
         score.draw(screen)
         pg.display.update()
