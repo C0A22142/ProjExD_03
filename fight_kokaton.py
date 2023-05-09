@@ -126,6 +126,7 @@ class Beam:
     """
     ビームに関するクラス
     """
+
     def __init__(self, bird: Bird):
         """
         割愛
@@ -166,6 +167,7 @@ def main():
     bird = Bird(3, (900, 400))
     bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]
     beam = None
+    multibeam = []
     score = Score()
 
     tmr = 0
@@ -175,6 +177,7 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beam = Beam(bird)
+                multibeam.append(beam)
 
         tmr += 1
         screen.blit(bg_img, [0, 0])
@@ -191,15 +194,18 @@ def main():
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
 
-        if beam is not None:  # ビームが存在しているとき
-            beam.update(screen)
-            for i, bomb in enumerate(bombs):
-                if beam._rct.colliderect(bomb._rct):
-                    beam = None
-                    del bombs[i]
-                    bird.change_img(6, screen)
-                    score.count_s(1) #count_s呼出し
-                    break
+        for i, item in enumerate(multibeam):
+            if beam is not None:  # ビームが存在しているとき
+                beam.update(screen)
+                for i, bomb in enumerate(bombs):
+                    if beam._rct.colliderect(bomb._rct):
+                        beam = None
+                        del bombs[i]
+                        bird.change_img(6, screen)
+                        score.count_s(1) #count_s呼出し
+                        break
+            if bird._rct.right > 1600:
+                multibeam.pop(i) 
         score.draw(screen)
         pg.display.update()
         clock.tick(1000)
