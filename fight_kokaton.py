@@ -117,7 +117,7 @@ class Beam:
         self._rct.centerx = bird._rct.centerx + bird._rct.width/2
         self._rct.centery = bird._rct.centery
         """
-        画像surface
+        画像surface 
         画像surfaceに対応したrect
         rectに座標を設定する
         """
@@ -148,8 +148,6 @@ def main():
 
         tmr += 1
         screen.blit(bg_img, [0, 0])
-        
-        
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
@@ -162,12 +160,12 @@ def main():
                 time.sleep(1)
                 return
         
-        
         if beam is not None:
             beam.update(screen)
             if bomb is not None and beam._rct.colliderect(bomb._rct):
                 beam = None
                 bomb = None
+                bird.change_img(6, screen)
         pg.display.update()
         clock.tick(1000)
 
