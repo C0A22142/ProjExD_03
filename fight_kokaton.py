@@ -12,9 +12,9 @@ HEIGHT = 900  # ゲームウィンドウの高さ
 def check_bound(area: pg.Rect, obj: pg.Rect) -> tuple[bool, bool]:
     """
     オブジェクトが画面内か画面外かを判定し，真理値タプルを返す
-    引数1 area：画面SurfaceのRect
-    引数2 obj：オブジェクト（爆弾，こうかとん）SurfaceのRect
-    戻り値：横方向，縦方向のはみ出し判定結果（画面内：True／画面外：False）
+    引数1 area:画面SurfaceのRect
+    引数2 obj:オブジェクト(爆弾,こうかとん)SurfaceのRect
+    戻り値：横方向，縦方向のはみ出し判定結果(画面内:True/画面外:False)
     """
     yoko, tate = True, True
     if obj.left < area.left or area.right < obj.right:  # 横方向のはみ出し判定
@@ -38,8 +38,8 @@ class Bird:
     def __init__(self, num: int, xy: tuple[int, int]):
         """
         こうかとん画像Surfaceを生成する
-        引数1 num：こうかとん画像ファイル名の番号
-        引数2 xy：こうかとん画像の位置座標タプル
+        引数1 num:こうかとん画像ファイル名の番号
+        引数2 xy:こうかとん画像の位置座標タプル
         """
         self._img = pg.transform.flip(  # 左右反転
             pg.transform.rotozoom(  # 2倍に拡大
@@ -55,8 +55,8 @@ class Bird:
     def change_img(self, num: int, screen: pg.Surface):
         """
         こうかとん画像を切り替え，画面に転送する
-        引数1 num：こうかとん画像ファイル名の番号
-        引数2 screen：画面Surface
+        引数1 num:こうかとん画像ファイル名の番号
+        引数2 screen:画面Surface
         """
         self._img = pg.transform.rotozoom(pg.image.load(f"ex03/fig/{num}.png"), 0, 2.0)
         screen.blit(self._img, self._rct)
@@ -64,8 +64,8 @@ class Bird:
     def update(self, key_lst: list[bool], screen: pg.Surface):
         """
         押下キーに応じてこうかとんを移動させる
-        引数1 key_lst：押下キーの真理値リスト
-        引数2 screen：画面Surface
+        引数1 key_lst:押下キーの真理値リスト
+        引数2 screen:画面Surface
         """
         for k, mv in __class__._delta.items():
             if key_lst[k]:
@@ -84,8 +84,8 @@ class Bomb:
     def __init__(self, color: tuple[int, int, int], rad: int):
         """
         引数に基づき爆弾円Surfaceを生成する
-        引数1 color：爆弾円の色タプル
-        引数2 rad：爆弾円の半径
+        引数1 color:爆弾円の色タプル
+        引数2 rad:爆弾円の半径
         """
         self._img = pg.Surface((2*rad, 2*rad))
         pg.draw.circle(self._img, color, (rad, rad), rad)
@@ -97,7 +97,7 @@ class Bomb:
     def update(self, screen: pg.Surface):
         """
         爆弾を速度ベクトルself._vx, self._vyに基づき移動させる
-        引数 screen：画面Surface
+        引数 screen:画面Surface
         """
         yoko, tate = check_bound(screen.get_rect(), self._rct)
         if not yoko:
@@ -107,6 +107,26 @@ class Bomb:
         self._rct.move_ip(self._vx, self._vy)
         screen.blit(self._img, self._rct)
 
+class Beam:
+    """
+    ビームに関するクラス
+    """
+    def __init__(self, bird: Bird):
+        self._img = pg.image.load(f"ex03/fig/beam.png")
+        self._rct = self._img.get_rect()
+        self._rct.centerx = bird._rct.centerx + bird._rct.width/2
+        self._rct.centery = bird._rct.centery
+        """
+        画像surface
+        画像surfaceに対応したrect
+        rectに座標を設定する
+        """
+        self._vx, self._vy = +1, 0
+
+    def update(self, screen: pg.Surface):
+        
+        self._rct.move_ip(self._vx, self._vy)
+        screen.blit(self._img, self._rct)
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -116,25 +136,38 @@ def main():
 
     bird = Bird(3, (900, 400))
     bomb = Bomb((255, 0, 0), 10)
+    beam = None
 
     tmr = 0
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
+            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                beam = Beam(bird)
+
         tmr += 1
         screen.blit(bg_img, [0, 0])
         
-        if bird._rct.colliderect(bomb._rct):
-            # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
-            bird.change_img(8, screen)
-            pg.display.update()
-            time.sleep(1)
-            return
+        
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        bomb.update(screen)
+        if bomb is not None:
+            bomb.update(screen)
+            if bird._rct.colliderect(bomb._rct):
+            # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
+                bird.change_img(8, screen)
+                pg.display.update()
+                time.sleep(1)
+                return
+        
+        
+        if beam is not None:
+            beam.update(screen)
+            if bomb is not None and beam._rct.colliderect(bomb._rct):
+                beam = None
+                bomb = None
         pg.display.update()
         clock.tick(1000)
 
